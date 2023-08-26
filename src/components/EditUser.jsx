@@ -1,124 +1,111 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-const EditUser = ({ data}) => {
-    const [name, setName] = useState(data.name);
-    const [blance, setBlance] = useState(data.blance);
-    const [email, setEmail] = useState(data.email);
-    const [registerat, setRegisterat] = useState(data.registerat);
-    const [active, setActive] = useState(data.active);
+const EditUser = ({ data, setEditFormOpen, setUsers }) => {
+  const [name, setName] = useState(data.name);
+  const [balance, setBalance] = useState(data.balance);
+  const [email, setEmail] = useState(data.email);
+  const [active, setActive] = useState(data.active);
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const newUser = {
-            name,
-            blance,
-            email,
-            registerat,
-            active,
-        };
-        
-     
+  const updatedUser = {
+    id: data.id,
+    name,
+    balance,
+    email,
+    registerAt: data.registerAt,
+    active,
+  };
+  const editUser = async (id, updatedUser) => {
+    console.log(updatedUser);
+    const config = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedUser),
     };
+    try {
+      const response = await fetch(
+        `http://localhost:3004/datas/${data.id}`,
+        config
+      );
+      const updatedUser = await response.json();
+      return updatedUser;
+    } catch (error) {
+      console.log("Error updating product:", error);
+    }
+  };
+  const handleSave = (id) => {
+    editUser(id, updatedUser)
+      .then((res) => {
+        console.log(res);
+        setUsers((res) => {
+          const users = res.filter((z) => z._id !== updatedUser.id);
+          return users;
+        });
+        window.location.reload();
+        setEditFormOpen(false);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
-    return (
-        <div className="">
-            <div className="">
-                <div className="">
-                    <h3>Edit user</h3>
-                    <svg
-                        className="header__edit"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </div>
-                <form onSubmit={handleSubmit} className="">
-                    <div className="input">
-                        <label htmlFor="name" className="">
-                            name
-                        </label>
-                        <input
-                            required
-                            type="text"
-                            id="name"
-                            className=""
-                            value={name}
-                            onChange={(event) => setName(event.target.value)}
-                            placeholder="Enter name"
-                        />
-                    </div>
-                    <div className="input">
-                        <label htmlFor="blance" className="">
-                            blance
-                        </label>
-                        <input
-                            required
-                            type="number"
-                            id="blance"
-                            className=""
-                            value={blance}
-                            onChange={(event) => setBlance(event.target.value)}
-                            placeholder="Enter blance"
-                        />
-                    </div>
-                    <div className="input">
-                        <label htmlFor="email" className="">
-                            email
-                        </label>
-                        <input
-                            required
-                            type="number"
-                            id="email"
-                            className=""
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
-                            placeholder="Enter email status"
-                        />
-                    </div>
-                    <div className="input">
-                        <label htmlFor="registerat" className="">
-                            registerat
-                        </label>
-                        <input
-                            required
-                            type="text"
-                            id="registerat"
-                            className="input__registerat"
-                            value={registerat}
-                            onChange={(event) => setRegisterat(event.target.value)}
-                            placeholder="Enter registerat"
-                        />
-                    </div>
-                    <div className="input">
-                        <label htmlFor="active" className="active">
-                            active
-                        </label>
-                        <input
-                            required
-                            type="text"
-                            id="active"
-                            className="input__active"
-                            value={active}
-                            onChange={(event) => setActive(event.target.value)}
-                            placeholder="Enter active"
-                        />
-                    </div>
-                    <div className="btn">
-                        <button
-                            type="submit"
-                            className="btn_save"
-                        >
-                            Save Update
-                        </button>
-                    </div>
-                </form>
-            </div>
+  return (
+    <div className="overlay">
+      <div className="form-container">
+        <h2 className="form-header">Edit User</h2>
+        <div className="form-label">
+          Name:
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
-    );
+        <div className="form-label">
+          Balance:
+          <input
+            className="form-input__text"
+            type="text"
+            value={balance}
+            onChange={(e) => setBalance(e.target.value)}
+          />
+        </div>
+        <div className="form-label">
+          Email:
+          <input
+            className="form-input__text"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="form-label-status">
+          Active:
+          <input
+            className="form-input__checkbox"
+            type="checkbox"
+            checked={active}
+            onChange={(e) => setActive(e.target.checked)}
+          />
+        </div>
+        <div className="button-container">
+          <button
+            onClick={() => handleSave(data.id)}
+            className="form-button form-button-save"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setEditFormOpen(false)}
+            className="form-button form-button-cancel"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default EditUser;

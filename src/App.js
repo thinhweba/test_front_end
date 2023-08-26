@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import "./index.css";
 import EditUser from "./components/EditUser";
 function App() {
-  // const [isEditFormOpen, setIsEditFormOpen] = useState[false]
+  const [editingUser, setEditingUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [users, setUsers] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -12,27 +12,22 @@ function App() {
   const firstIndex = lastIndex - recordsPerPage;
   const npage = Math.ceil(totalRecords / recordsPerPage);
   const numbers = [...Array(npage + 1).keys()].slice(1);
+  const [isEditFormOpen, setEditFormOpen] = useState(false);
   const handleDelete = (userId) => {
     fetch(`http://localhost:3004/datas/${userId}`, {
       method: "DELETE",
     }).then((res) => {
-      const updatedUsers = users.filter((user) => user.id !== userId);
-      setUsers(updatedUsers);
+      if (res.ok) {
+        const updatedUsers = users.filter((user) => user.id !== userId);
+        setUsers(updatedUsers);
+      }
     });
   };
   const handleEdit = (userId) => {
-    fetch(`http://localhost:3004/datas/${userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(),
-    })
-      .then((res) => res.json())
-      .then((updatedUsersData) => {
-        const updatedUsers = users.filter((user) => user.id !== userId);
-        setUsers(updatedUsers);
-      });
+    console.log(userId);
+    const userToEdit = users.find((user) => user.id === userId);
+    setEditingUser(userToEdit);
+    setEditFormOpen(true);
   };
 
   useEffect(() => {
@@ -65,40 +60,74 @@ function App() {
         <tbody>
           {users.map((data, i) => (
             <tr key={i} class="table__row">
-              <td class="table__cell">{data.id}</td>
               <td class="table__cell">
-                <input type="checkbox"></input>
-                {data.name}
+                <div className="table__cell-id">{data.id}</div>
               </td>
               <td class="table__cell">
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                }).format(data.balance)}
+                <div className="table__cell-name">
+                  <input type="checkbox"></input>
+                  {data.name}
+                </div>
               </td>
               <td class="table__cell">
-                <a
-                  className="link__fb"
-                  href="https://www.facebook.com/phan.giathinh.96/"
-                >
-                  {data.email}
-                </a>
-              </td>
-              <td class="table__cell--date">
-                {new Date(data.registerAt).toISOString().split("T")[0]}
+                <div className=".table__cell-balance">
+                  {
+                    new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    })
+                      .format(data.balance)
+                      .split(".")[0]
+                  }
+                </div>
               </td>
               <td class="table__cell">
-                {data.active && (
-                  <div className="table__cell--active">
-                    <span className="table__cell-text--active">Active</span>
-                  </div>
-                )}
+                <div className="table__cell-email">
+                  <a className="link__fb" href={`mailto:${data.email}`}>
+                    {data.email}
+                  </a>
+                </div>
+              </td>
+              <td className="table__cell tooltip">
+                <div className="table__cell-date">
+                  {new Date(data.registerAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                  })}
+                  /
+                  {new Date(data.registerAt).toLocaleDateString("en-US", {
+                    month: "numeric",
+                  })}
+                  /
+                  {new Date(data.registerAt).toLocaleDateString("en-US", {
+                    day: "numeric",
+                  })}
+                  <span className="tooltiptext">
+                    {new Date(data.registerAt).toLocaleTimeString("en-US", {
+                      hour12: false,
+                      hour: "2-digit",
+                    })}{" "}
+                    hours{" : "}
+                    {new Date(data.registerAt).toLocaleTimeString("en-US", {
+                      second: "2-digit",
+                    })}{" "}
+                    Seconds
+                  </span>
+                </div>
+              </td>
+              <td class="table__cell">
+                <div className="table__cell-status">
+                  {data.active && (
+                    <div className="table__cell table__cell--active">
+                      <span className="table__cell-text--active">Active</span>
+                    </div>
+                  )}
+                </div>
               </td>
               <td class="table__cell">
                 <div class="table__button">
                   <div
                     className="table__button-edit"
-                    onClick={() => {
+                    onClick={(e) => {
                       handleEdit(data.id);
                     }}
                   >
@@ -119,7 +148,8 @@ function App() {
                   </div>
                   <div
                     className="table__button-delete"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleDelete(data.id);
                     }}
                   >
@@ -143,6 +173,13 @@ function App() {
                   </div>
                 </div>
               </td>
+              {isEditFormOpen && (
+                <EditUser
+                  data={editingUser}
+                  setEditFormOpen={setEditFormOpen}
+                  setUsers={setUsers}
+                />
+              )}
             </tr>
           ))}
         </tbody>
